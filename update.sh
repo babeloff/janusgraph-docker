@@ -39,7 +39,7 @@ copy-with-template-generated-warning() {
   FILE=$1
   COMMENT=$2
   template-generated-warning "${COMMENT}" > $dir/$FILE
-  cat build/$FILE >> $dir/$FILE
+  cat src/$FILE >> $dir/$FILE
 }
 
 for version in "${versions[@]}"; do
@@ -71,20 +71,20 @@ for version in "${versions[@]}"; do
   template-generated-warning "#" > "$dir/Dockerfile"
   sed -e 's!^\(ARG JANUS_VERSION\)\s*=.*!\1='"${latest_version}"'!' \
     -e 's!{MAJOR_MINOR_VERSION_PLACEHOLDER}!'"${major_minor_version}"'!' \
-    build/Dockerfile-openjdk8.template >> "$dir/Dockerfile"
+    src/Dockerfile-openjdk8.template >> "$dir/Dockerfile"
 
   # copy docker-entrypoint
-  head -n 1 build/docker-entrypoint.sh > $dir/docker-entrypoint.sh
+  head -n 1 src/docker-entrypoint.sh > $dir/docker-entrypoint.sh
   template-generated-warning "#" >> $dir/docker-entrypoint.sh
-  awk 'NR>1' build/docker-entrypoint.sh >> $dir/docker-entrypoint.sh
+  awk 'NR>1' src/docker-entrypoint.sh >> $dir/docker-entrypoint.sh
 
   # copy load-initdb
-  head -n 1 build/load-initdb.sh > $dir/load-initdb.sh
+  head -n 1 src/load-initdb.sh > $dir/load-initdb.sh
   template-generated-warning "#" >> $dir/load-initdb.sh
-  awk 'NR>1' build/load-initdb.sh >> $dir/load-initdb.sh
+  awk 'NR>1' src/load-initdb.sh >> $dir/load-initdb.sh
 
   # copy resources
-  copy-with-template-generated-warning conf/janusgraph-berkeleyje-lucene-server.properties "#"
-  copy-with-template-generated-warning conf/log4j-server.properties "#"
-  copy-with-template-generated-warning scripts/remote-connect.groovy "//"
+  copy-with-template-generated-warning src/conf/janusgraph-berkeleyje-lucene-server.properties "#"
+  copy-with-template-generated-warning src/conf/log4j-server.properties "#"
+  copy-with-template-generated-warning src/scripts/remote-connect.groovy "//"
 done
