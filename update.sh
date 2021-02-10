@@ -86,5 +86,7 @@ for version in "${versions[@]}"; do
   # copy resources
   copy-with-template-generated-warning src/conf/janusgraph-berkeleyje-lucene-server.properties "#"
   copy-with-template-generated-warning src/conf/log4j-server.properties "#"
+  copy-with-template-generated-warning src/conf/gremlin-server-subgraph.yaml "#"
+  copy-with-template-generated-warning src/conf/remote-subgraphs.yaml "#"
   copy-with-template-generated-warning src/scripts/remote-connect.groovy "//"
 done
