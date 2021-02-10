@@ -70,8 +70,8 @@ for version in "${versions[@]}"; do
   # copy Dockerfile and update version
   template-generated-warning "#" > "$dir/Dockerfile"
   sed -e 's!^\(ARG JANUS_VERSION\)\s*=.*!\1='"${latest_version}"'!' \
-    -e 's!{MAJOR_MINOR_VERSION_PLACEHOLDER}!'"${major_minor_version}"'!' \
-    src/Dockerfile-openjdk8.template >> "$dir/Dockerfile"
+    -e 's!{JANUS_MAJOR_MINOR_VERSION}!'"${major_minor_version}"'!' \
+    src/Dockerfile-openjdk8 >> "$dir/Dockerfile"
 
   # copy docker-entrypoint
   head -n 1 src/docker-entrypoint.sh > $dir/docker-entrypoint.sh
