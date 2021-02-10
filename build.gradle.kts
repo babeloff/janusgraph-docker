@@ -15,7 +15,7 @@ docker {
      * Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
      * https://docs.docker.com/engine/reference/commandline/tag/
      */
-    tag("vu-metalab-docker", "nexus.isis.vanderbilt.edu:29000/janusgraph:0.5.3")
+    tag("vu-metalab-docker", "nexus.isis.vanderbilt.edu:29000/janusgraph:2021.2.11")
 
     setDockerfile(file("${projectDir}/src/Dockerfile-openjdk8"))
     buildArgs(mapOf(

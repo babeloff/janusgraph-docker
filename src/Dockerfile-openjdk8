@@ -42,7 +42,7 @@ COPY conf/janusgraph-berkeleyje-lucene-server.properties \
      ${JANUS_HOME}/conf/gremlin-server/
 
 COPY conf/gremlin-server-tinker.yaml ${JANUS_HOME}/conf/gremlin-server/gremlin-server.yaml
-COPY conf/gremlin-client-remote-subgraph.yaml ${JANUS_HOME}/conf/remote-subgraphs.yaml
+COPY conf/remote-subgraphs.yaml ${JANUS_HOME}/conf/remote-subgraphs.yaml
 
 COPY scripts/remote-connect.groovy ${JANUS_HOME}/scripts/
 
