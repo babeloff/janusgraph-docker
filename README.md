@@ -107,7 +107,7 @@ The environment variables supported by the JanusGraph image are summarized below
 | ---- | ---- |
 | `JANUS_PROPS_TEMPLATE` | JanusGraph properties file template (see [below](#properties-template)). The default properties file template is `berkeleyje-lucene`. |
 | `janusgraph.*` | Any JanusGraph configuration option to override in the template properties file, specified with an outer `janusgraph` namespace (e.g., `janusgraph.storage.hostname`). See [JanusGraph Configuration][JG_CONFIG] for available options. |
-| `gremlinserver.*` | Any Gremlin Server configuration option to override in the default configuration (YAML) file, specified with an outer `gremlinserver` namespace (e.g., `gremlinserver.threadPoolWorker`). You can set or update nested options using additional dots (e.g., `gremlinserver.graphs.graph`). See [Gremlin Server Configuration][GS_CONFIG] for available options. See [Gremlin Server Environment Variable Syntax](#Gremlin-Server-Environment-Variable-Syntax) section below for help editing gremlin server configuration using environment variables. |
+| `gremlinserver_<id>` | Any Gremlin Server configuration option to override in the default configuration (YAML) file, specified with an outer `gremlinserver` namespace (e.g., `gremlinserver_threadPoolWorker`). Each gremlin server configuration updates must have unique names (e.g., `gremlinserver_graphs.graph`). See [Gremlin Server Configuration][GS_CONFIG] for available options. See [Gremlin Server Environment Variable Syntax](#Gremlin-Server-Environment-Variable-Syntax) section below for help editing gremlin server configuration using environment variables. |
 | `JANUS_SERVER_TIMEOUT` | Timeout (seconds) used when waiting for Gremlin Server before executing initialization scripts. Default value is 30 seconds. |
 | `JANUS_STORAGE_TIMEOUT` | Timeout (seconds) used when waiting for the storage backend before starting Gremlin Server. Default value is 60 seconds. |
 | `GREMLIN_REMOTE_HOSTS` | Optional hostname for external Gremlin Server instance. Enables a container running Gremlin Console to connect to a remote server using `conf/remote.yaml`. |
@@ -137,7 +137,7 @@ storage and server settings:
 ```bash
 docker run --name janusgraph-default \
     -e janusgraph.storage.berkeleyje.cache-percentage=80 \
-    -e gremlinserver.threadPoolWorker=2 \
+    -e gremlinserver_threadPoolWorker=".threadPoolWorker = 2" \
     docker.io/janusgraph/janusgraph:latest
 ```
 
@@ -198,12 +198,15 @@ Let's take a look at a few examples:
 
 ##### Nested Properties
 
+https://mikefarah.gitbook.io/yq/operators/traverse
+
 For example, say we want to add a configuration property `graphs.ConfigurationMangementGraph`
 with the value `conf/JanusGraph-configurationmanagement.properties`:
 
 ```text
-$ docker run --rm -it -e gremlinserver.graphs.ConfigurationManagementGraph=\
-conf/JanusGraph-configurationmanagement.properties docker.io/janusgraph/janusgraph:latest janusgraph show-config
+$ docker run --rm -it \
+   -e gremlinserver_cmg=".graphs.ConfigurationManagementGraph = \"conf/JanusGraph-configurationmanagement.properties\"" \
+   docker.io/janusgraph/janusgraph:latest janusgraph show-config
 ...
 graphs:
   graph: conf/gremlin-server/janusgraph-cql-es-server.properties
@@ -214,12 +217,14 @@ scriptEngines:
 
 ##### Delete a component
 
-To delete a component append %d to the 'gremlinserver.' prefix before the closing dot and then
-select the component following the prefix. Don't forget the trailing '='. For example to delete the
-graphs.graph configuration property we can do the following:
+https://mikefarah.gitbook.io/yq/operators/delete
+
+To delete a component from 'gremlinserver' mark the path for deletion.
+For example to delete the graphs.graph configuration property we can do the following:
 
 ```text
-$ docker run --rm -it -e gremlinserver%d.graphs.graph= docker.io/janusgraph/janusgraph:latest janusgraph show-config
+$ docker run --rm -it -e gremlinserver_d.graphs.graph="del(.graphs.graph)" \
+   janusgraph show-config
 ...
 channelizer: org.apache.tinkerpop.gremlin.server.channel.WebSocketChannelizer
 graphs: {}
@@ -229,15 +234,24 @@ scriptEngines:
 
 ##### Append item and alternate indexing syntax
 
-This example shows how to append an item to a list. This can be done by adding "[+]" at the end of
-the environment variable name. This example also shows how to use square bracket syntax as an
-alternative to the dot syntax. This alternate syntax is useful if one of the keys in the property
-path contains special characters as we see in the example below.
+* https://mikefarah.gitbook.io/yq/operators/add
+* https://mikefarah.gitbook.io/yq/operators/traverse#keys-with-spaces
+
+This example shows how to append an item to a list.
+Add behaves differently according to the type of the LHS:
+* arrays: concatenate
+* number scalars: arithmetic addition
+* string scalars: concatenate
+Use += as append assign for things like increment. Note that .a += .x is equivalent to running .a = .a + .x.
+
 
 ```text
-$ docker run --rm -it -e gremlinserver.scriptEngines.gremlin-groovy\
-.plugins["org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin"]\
-.files[+]=/scripts/another-script.groovy docker.io/janusgraph/janusgraph:latest janusgraph show-config
+$ docker run --rm -it \
+   -e gremlinserver_se.gg="\
+.scriptEngines.gremlin-groovy\
+.plugins.[\"org.apache.tinkerpop.gremlin.jsr223.ScriptFileGremlinPlugin\"]\
+.files += [\"/scripts/another-script.groovy\"]" \
+  docker.io/janusgraph/janusgraph:latest janusgraph show-config
 ...
 scriptEngines:
   gremlin-groovy:
