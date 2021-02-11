@@ -19,9 +19,9 @@ GREMLIN_YAML="${JANUS_CONFIG_DIR}/gremlin-server.yaml"
 
 # running as root; step down to run as janusgraph user
 if [ "$1" == 'janusgraph' ] && [ "$(id -u)" == "0" ]; then
-  mkdir -p ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
-  chown -R janusgraph:janusgraph ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
-  chmod 700 ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
+  mkdir -p "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
+  chown -R janusgraph:janusgraph "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
+  chmod 700 "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
 
   exec chroot --skip-chdir --userspec janusgraph:janusgraph / "${BASH_SOURCE}" "$@"
 fi
@@ -29,32 +29,26 @@ fi
 # running as non root user
 if [ "$1" == 'janusgraph' ]; then
   # setup config directory
-  mkdir -p ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
-  cp conf/gremlin-server/janusgraph-${JANUS_PROPS_TEMPLATE}-server.properties ${JANUS_CONFIG_DIR}/janusgraph.properties
-  cp conf/gremlin-server/gremlin-server.yaml ${JANUS_CONFIG_DIR}
-  chown -R "$(id -u):$(id -g)" ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
-  chmod 700 ${JANUS_DATA_DIR} ${JANUS_CONFIG_DIR}
-  chmod -R 600 ${JANUS_CONFIG_DIR}/*
+  mkdir -p "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
+  cp "conf/gremlin-server/janusgraph-${JANUS_PROPS_TEMPLATE}-server.properties" "${JANUS_CONFIG_DIR}/janusgraph.properties"
+  cp conf/gremlin-server/gremlin-server.yaml "${JANUS_CONFIG_DIR}"
+  chown -R "$(id -u):$(id -g)" "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
+  chmod 700 "${JANUS_DATA_DIR}" "${JANUS_CONFIG_DIR}"
+  chmod -R 600 "${JANUS_CONFIG_DIR}"/*
 
   # apply configuration from environment
-  while IFS='=' read -r envvar_key envvar_val; do
-    if [[ "${envvar_key}" =~ janusgraph\. ]] && [[ ! -z ${envvar_val} ]]; then
+  while IFS='=' read -r env_var_key env_var_val; do
+    if [[ "${env_var_key}" =~ janusgraph\. ]] && [[ -n ${env_var_val} ]]; then
       # strip namespace and use properties file delimiter for janusgraph properties
-      envvar_key=${envvar_key#"janusgraph."}
+      env_var_key=${env_var_key#"janusgraph."}
       # Add new or update existing field in configuration file
-      if grep -q -E "^\s*${envvar_key}\s*=\.*" ${JANUS_PROPS}; then
-        sed -ri "s#^(\s*${envvar_key}\s*=).*#\\1${envvar_val}#" ${JANUS_PROPS}
+      if grep -q -E "^\s*${env_var_key}\s*=\.*" "${JANUS_PROPS}"; then
+        sed -ri "s#^(\s*${env_var_key}\s*=).*#\\1${env_var_val}#" "${JANUS_PROPS}"
       else
-        echo "${envvar_key}=${envvar_val}" >> ${JANUS_PROPS}
+        echo "${env_var_key}=${env_var_val}" >> "${JANUS_PROPS}"
       fi
-    elif [[ "${envvar_key}" =~ gremlinserver(%d)?[.]{1}(.+) ]]; then
-      # Check for edit mode %d after prefix
-      if [[ ${BASH_REMATCH[1]} == "%d" ]]; then edit_mode="d"; else edit_mode="w"; fi
-      # strip namespace from env variable and get value
-      envvar_key=${BASH_REMATCH[2]}
-      if [[ edit_mode == "d" ]]; then envvar_val=""; fi
-      # add new or update existing field in configuration file
-      yq ${edit_mode} -P -i ${GREMLIN_YAML} ${envvar_key} ${envvar_val}
+    elif [[ "${env_var_key}" =~ gremlinserver_[[:alnum:]_.-]{1,30} ]]; then
+      yq eval --prettyPrint --inplace "${GREMLIN_YAML}" "${env_var_val}"
     else
       continue
     fi
@@ -69,9 +63,9 @@ if [ "$1" == 'janusgraph' ]; then
     exit 0
   else
     # wait for storage
-    if ! [ -z "${JANUS_STORAGE_TIMEOUT:-}" ]; then
+    if [ -n "${JANUS_STORAGE_TIMEOUT:-}" ]; then
       F="$(mktemp --suffix .groovy)"
-      echo "graph = JanusGraphFactory.open('${JANUS_CONFIG_DIR}/janusgraph.properties')" > $F
+      echo "graph = JanusGraphFactory.open('${JANUS_CONFIG_DIR}/janusgraph.properties')" > "$F"
       timeout "${JANUS_STORAGE_TIMEOUT}s" bash -c \
         "until bin/gremlin.sh -e $F > /dev/null 2>&1; do echo \"waiting for storage...\"; sleep 5; done"
       rm -f "$F"
@@ -79,13 +73,13 @@ if [ "$1" == 'janusgraph' ]; then
 
     /usr/local/bin/load-initdb.sh &
 
-    exec ${JANUS_HOME}/bin/gremlin-server.sh ${JANUS_CONFIG_DIR}/gremlin-server.yaml
+    exec "${JANUS_HOME}/bin/gremlin-server.sh" "${JANUS_CONFIG_DIR}/gremlin-server.yaml"
   fi
 fi
 
 # override hosts for remote connections with Gremlin Console
-if ! [ -z "${GREMLIN_REMOTE_HOSTS:-}" ]; then
-  sed -i "s/hosts\s*:.*/hosts: [$GREMLIN_REMOTE_HOSTS]/" ${JANUS_HOME}/conf/remote.yaml
+if [ -n "${GREMLIN_REMOTE_HOSTS:-}" ]; then
+  sed -i "s/hosts\s*:.*/hosts: [$GREMLIN_REMOTE_HOSTS]/" "${JANUS_HOME}/conf/remote.yaml"
 fi
 
 exec "$@"

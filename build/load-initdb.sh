@@ -20,14 +20,14 @@ if ! [ "$(ls -A /docker-entrypoint-initdb.d)" ]; then
 fi
 
 # wait for JanusGraph Server
-if ! [ -z "${JANUS_SERVER_TIMEOUT:-}" ]; then
+if [ -n "${JANUS_SERVER_TIMEOUT:-}" ]; then
   timeout "${JANUS_SERVER_TIMEOUT}s" bash -c \
   "until true &>/dev/null </dev/tcp/127.0.0.1/8182; do echo \"waiting for JanusGraph Server...\"; sleep 5; done"
 fi
 
 for f in /docker-entrypoint-initdb.d/*; do
   case "$f" in
-    *.groovy) echo "$0: running $f"; ${JANUS_HOME}/bin/gremlin.sh -e "$f"; echo ;;
+    *.groovy) echo "$0: running $f"; "${JANUS_HOME}/bin/gremlin.sh" -e "$f"; echo ;;
     *)        echo "$0: ignoring $f" ;;
   esac
   echo

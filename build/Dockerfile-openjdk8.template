@@ -15,7 +15,7 @@
 FROM debian:buster-slim as builder
 
 ARG JANUS_VERSION=placeholder
-ARG YQ_VERSION=3.4.1
+ARG YQ_VERSION=v4.2.0
 
 ENV JANUS_VERSION=${JANUS_VERSION} \
     JANUS_HOME=/opt/janusgraph
