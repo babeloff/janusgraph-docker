@@ -5,24 +5,31 @@ plugins {
 //    id("com.palantir.docker-run")
 }
 
+val janusMMVersion: String by project
+val janusVersion: String by project
+
 /**
  * https://github.com/palantir/gradle-docker
  */
 docker {
-    name = "janusgraph/janusgraph:0.5.3"
+    name = "janusgraph/janusgraph:${janusVersion}"
 
     /**
      * Create a tag TARGET_IMAGE that refers to SOURCE_IMAGE
      * https://docs.docker.com/engine/reference/commandline/tag/
      */
-    tag("vu-metalab-docker", "nexus.isis.vanderbilt.edu:29000/janusgraph:2021.2.11")
+    tag("metalab", "nexus.isis.vanderbilt.edu:29000/janusgraph:2021.2.11")
+    tag("latest", "janusgraph/janusgraph:latest")
 
     setDockerfile(file("${projectDir}/src/Dockerfile-openjdk8"))
     buildArgs(mapOf(
-        "JANUS_VERSION" to "0.5.3",
-        "JANUS_MAJOR_MINOR_VERSION" to "0.5"))
+        "JANUS_VERSION" to janusVersion,
+        "JANUS_MAJOR_MINOR_VERSION" to janusMMVersion
+    ))
 
-    labels(mapOf("description" to "This differs from the base image in that it can serialize TinkerGraph objects"))
+    labels(mapOf(
+        "description" to "This differs from the base image in that it can serialize TinkerGraph objects"
+    ))
     files(
         "src/docker-entrypoint.sh",
         "src/load-initdb.sh")

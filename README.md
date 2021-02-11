@@ -304,7 +304,7 @@ Here's the policy we follow for tagging our Docker images:
 | 0.x.x          | <ul><li>defined JanusGraph version</li><li>breaking changes are only in this repo</li></ul> | openjdk:8-jre-slim-buster |
 | 0.x.x-revision | <ul><li>defined JanusGraph version</li><li>defined commit in JanusGraph-docker repo</li></ul> | openjdk:8-jre-slim-buster |
 
-We collect a list of changes in our docker images build process in our [CHANGELOG.md](./CHANGELOG.md)
+We collect a list of changes in our docker images build process in our [CHANGELOG.md](docs/CHANGELOG.md)
 
 ## Community
 
@@ -325,9 +325,9 @@ GitHub.
 ## License
 
 JanusGraph Docker images are provided under the [Apache 2.0
-license](APACHE-2.0.txt) and documentation is provided under the [CC-BY-4.0
-license](CC-BY-4.0.txt). For details about this dual-license structure, please
-see [`LICENSE.txt`](LICENSE.txt).
+license](docs/APACHE-2.0.txt) and documentation is provided under the [CC-BY-4.0
+license](docs/CC-BY-4.0.txt). For details about this dual-license structure, please
+see [`LICENSE.txt`](docs/LICENSE.txt).
 
 [actions-badge]: https://img.shields.io/github/workflow/status/JanusGraph/janusgraph-docker/Deploy%20Images
 [actions-url]: https://github.com/JanusGraph/janusgraph-docker/actions
